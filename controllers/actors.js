@@ -2,6 +2,7 @@ const Actor = require('../models/Actor.js');
 const Script = require('../models/Script.js');
 const User = require('../models/User');
 const helpers = require('./helpers');
+const shareConfig = require('../config/share');
 const _ = require('lodash');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
@@ -51,7 +52,14 @@ exports.getActor = async(req, res, next) => {
 
         const finalfeed = helpers.getFeed([], script_feed, user, 'CHRONOLOGICAL', (process.env.REMOVE_FLAGGED_CONTENT == 'TRUE'), false);
         await user.save();
-        res.render('actor', { script: finalfeed, actor: actor, isBlocked: isBlocked, isReported: isReported, title: actor.profile.name });
+        res.render('actor', {
+            script: finalfeed,
+            actor: actor,
+            isBlocked: isBlocked,
+            isReported: isReported,
+            title: actor.profile.name,
+            ...shareConfig
+        });
     } catch (err) {
         next(err);
     }

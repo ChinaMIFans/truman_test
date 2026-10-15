@@ -42,6 +42,90 @@ function likePost(e) {
     }
 }
 
+function sharePost(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = $(e.target).closest('.ui.share.button');
+    if (target.hasClass('share-completed') || target.hasClass('red')) return;
+    const card = target.closest('.ui.fluid.card');
+    let modal = card.data('shareModal');
+    if (!modal || !modal.length) {
+        modal = card.find('.share-modal');
+        card.data('shareModal', modal);
+        modal.detach().appendTo('body');
+    }
+    const postType = card.attr('type');
+    const path = postType === 'userPost' ? '/userPost_feed' : '/feed';
+    const payload = {
+        postID: card.attr('postID'),
+        shareClick: Date.now(),
+        _csrf: $('meta[name="csrf-token"]').attr('content')
+    };
+    if (postType !== 'userPost') payload.postCondition = card.attr('postCondition');
+
+    modal.data('sharePath', path).data('sharePayload', payload).data('shareCard', card);
+    modal.data('shareFinished', false);
+    $.post(path, payload);
+    const overlay = $('<div class="share-overlay"></div>').css({
+        position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.55)', zIndex: 1000
+    }).appendTo('body');
+    modal.data('shareOverlay', overlay).addClass('active visible').css({
+        display: 'block', position: 'fixed', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)', zIndex: 1001, margin: 0,
+        maxWidth: 'calc(100vw - 2em)'
+    });
+
+    const delaySeconds = Math.max(0, Number.parseInt(modal.data('shareDelay'), 10) || 0);
+    const autoAction = modal.data('shareAutoAction');
+    const finish = function(confirmed) {
+        if (modal.data('shareFinished')) return;
+        modal.data('shareFinished', true);
+        clearInterval(modal.data('shareInterval'));
+        clearTimeout(modal.data('shareTimeout'));
+        const action = confirmed ? 'share' : 'shareCancel';
+        const actionPayload = Object.assign({}, modal.data('sharePayload'));
+        delete actionPayload.shareClick;
+        actionPayload[action] = Date.now();
+        $.post(modal.data('sharePath'), actionPayload).done(function() {
+            if (confirmed) {
+                modal.data('shareCard').find('.ui.share.button')
+                    .addClass('red share-completed')
+                    .attr({ 'aria-disabled': 'true', tabindex: '-1', 'data-tooltip': '已转发' });
+            }
+            modal.removeClass('active visible').hide();
+            modal.data('shareOverlay').remove();
+        });
+    };
+    modal.data('shareFinish', finish);
+    if (autoAction !== 'none') {
+        const prompt = modal.find('.share-prompt');
+        const basePrompt = prompt.data('basePrompt');
+        const template = prompt.data('countdownTemplate');
+        const actionText = prompt.data('actionText');
+        const startedAt = Date.now();
+        const updateCountdown = function() {
+            const remaining = Math.max(0, Math.ceil((delaySeconds * 1000 - (Date.now() - startedAt)) / 1000));
+            const countdownText = template
+                .replace(/\{seconds\}/g, String(remaining))
+                .replace(/\{action\}/g, actionText);
+            prompt.text(basePrompt + countdownText);
+        };
+        updateCountdown();
+        modal.data('shareInterval', setInterval(updateCountdown, 100));
+        modal.data('shareTimeout', setTimeout(function() {
+            finish(autoAction === 'share');
+        }, delaySeconds * 1000));
+    }
+}
+
+function confirmShare(e) {
+    $(e.target).closest('.share-modal').data('shareFinish')(true);
+}
+
+function cancelShare(e) {
+    $(e.target).closest('.share-modal').data('shareFinish')(false);
+}
+
 function flagPost(e) {
     const target = $(e.target);
     const post = target.closest(".ui.fluid.card");
@@ -88,7 +172,7 @@ function likeComment(e) {
     if (target.hasClass("red")) { // Unlike comment
         target.removeClass("red");
         comment.find("i.heart.icon").removeClass("red");
-        target.html('Like');
+        target.text('喜欢');
         label.html(function(i, val) { return val * 1 - 1 });
 
         if (target.closest(".ui.fluid.card").attr("type") == 'userPost') {
@@ -112,7 +196,7 @@ function likeComment(e) {
     } else { // Like comment
         target.addClass("red");
         comment.find("i.heart.icon").addClass("red");
-        target.html('Unlike');
+        target.text('取消喜欢');
         label.html(function(i, val) { return val * 1 + 1 });
 
         if (target.closest(".ui.fluid.card").attr("type") == 'userPost')
@@ -220,11 +304,11 @@ function addComment(e) {
                 <div class="metadata"> 
                     <span class="date">${humanized_time_span(currDate)}</span>
                     <i class="heart icon"></i> 
-                    <span class="num"> 0 </span> Likes
+                    <span class="num"> 0 </span> 个赞
                 </div> 
                 <div class="text">${text}</div>
                 <div class="actions"> 
-                    <a class="like comment" onClick="likeComment(event)">Like</a> 
+                    <a class="like comment" onClick="likeComment(event)">喜欢</a>
                 </div> 
             </div>
         </div>`;
@@ -256,10 +340,10 @@ function addComment(e) {
 function followUser(e) {
     const target = $(e.target);
     const username = target.attr('actor_un');
-    if (target.text().trim() == "Follow") { // Follow Actor
+    if (target.text().trim() == "关注") { // Follow Actor
         $(`.ui.basic.primary.follow.button[actor_un='${username}']`).each(function(i, element) {
             const button = $(element);
-            button.text("Following");
+            button.text("已关注");
             button.prepend("<i class='check icon'></i>");
         })
         $.post("/user", {
@@ -269,7 +353,7 @@ function followUser(e) {
     } else { // Unfollow Actor
         $(`.ui.basic.primary.follow.button[actor_un='${username}']`).each(function(i, element) {
             const button = $(element);
-            button.text("Follow");
+            button.text("关注");
             button.find('i').remove();
         })
         $.post("/user", {
@@ -288,7 +372,7 @@ $(window).on('load', () => {
     });
 
     // ************ Actions on Main Post ***************
-    // Focus new comment element if "Reply" button is clicked
+    // Focus new comment element when the comment button is clicked
     $('.reply.button').on('click', function() {
         let parent = $(this).closest(".ui.fluid.card");
         parent.find("textarea.newcomment").focus();
@@ -342,7 +426,7 @@ $(window).on('load', () => {
         // Handling scrolling down like normal
         // Called when bottomVisible turns true (bottom of a picture is visible): bottom can enter from top or bottom of viewport
         onBottomVisible: function(element) {
-            var startTime = parseInt($(this).siblings(".content").children(".myTimer").text());
+            var startTime = parseInt($(this).siblings(".myTimer").text(), 10);
             // Bottom of picture enters from bottom (scrolling down the feed; as normal)
             if (element.topVisible) { // Scrolling Down AND entire post is visible on the viewport 
                 // If this is the first time bottom is visible
@@ -352,13 +436,13 @@ $(window).on('load', () => {
             } else { // Scrolling up and this event does not matter, since entire photo isn't visible anyways.
                 var startTime = 0;
             }
-            $(this).siblings(".content").children(".myTimer").text(startTime);
+            $(this).siblings(".myTimer").text(startTime);
         },
 
         // Element's bottom edge has passed top of the screen (disappearing); happens only when Scrolling Up
         onBottomPassed: function(element) {
             var endTime = Date.now();
-            var startTime = parseInt($(this).siblings(".content").children(".myTimer").text());
+            var startTime = parseInt($(this).siblings(".myTimer").text(), 10);
             var totalViewTime = endTime - startTime; // TOTAL TIME HERE
 
             var parent = $(this).parents(".ui.fluid.card");
@@ -373,17 +457,17 @@ $(window).on('load', () => {
                     _csrf: $('meta[name="csrf-token"]').attr('content')
                 });
                 // Reset Timer
-                $(this).siblings(".content").children(".myTimer").text(0);
+                $(this).siblings(".myTimer").text(0);
             }
         },
 
         // Handling scrolling up
         // Element's top edge has passed top of the screen (appearing); happens only when Scrolling Up
         onTopPassedReverse: function(element) {
-            var startTime = parseInt($(this).siblings(".content").children(".myTimer").text());
+            var startTime = parseInt($(this).siblings(".myTimer").text(), 10);
             if (element.bottomVisible && startTime == 0) { // Scrolling Up AND entire post is visible on the viewport 
                 var startTime = Date.now();
-                $(this).siblings(".content").children(".myTimer").text(startTime);
+                $(this).siblings(".myTimer").text(startTime);
             }
         },
 
@@ -392,7 +476,7 @@ $(window).on('load', () => {
             if (element.topPassed) { // Scrolling Down, disappears on top; this event doesn't matter (since it is when bottom disappears that time is stopped)
             } else { // False when Scrolling Up (the bottom of photo exits screen.)
                 var endTime = Date.now();
-                var startTime = parseInt($(this).siblings(".content").children(".myTimer").text());
+                var startTime = parseInt($(this).siblings(".myTimer").text(), 10);
                 var totalViewTime = endTime - startTime;
 
                 var parent = $(this).parents(".ui.fluid.card");
@@ -407,9 +491,14 @@ $(window).on('load', () => {
                         _csrf: $('meta[name="csrf-token"]').attr('content')
                     });
                     // Reset Timer
-                    $(this).siblings(".content").children(".myTimer").text(0);
+                    $(this).siblings(".myTimer").text(0);
                 }
             }
         }
     });
 });
+
+// Delegated handlers keep sharing functional even if feed cards are rendered or moved later.
+$(document).on('click', '.ui.share.button', sharePost);
+$(document).on('click', '.share-confirm', confirmShare);
+$(document).on('click', '.share-cancel', cancelShare);

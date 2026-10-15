@@ -10,28 +10,38 @@
         .center
           h2.ui.inverted.icon.header
             i.red.flag.icon
-            | You've flagged this!
+            | 您已举报此帖子
             h3.ui.inverted.header
-                span="The admins will review this post further. We are sorry you had this experience."
+                span="管理员会进一步审核此帖子，感谢您的反馈。"
           .ui.inverted.unflag.button(tabindex='0')
             i.flag.icon
-            |  Unflag
+            |  取消举报
     .img.post.image
-      img(src='/public/picture.svg', data-src=cdn+"/post_pictures/"+val.picture, style="max-width:100%; width:100%;")
+      img(src=cdn+"/post_pictures/"+val.picture, loading='lazy', decoding='async', style="max-width:100%; width:100%;")
     .description=val.body
     .myTimer.hidden 0
-  .ui.bottom.three.attached.icon.buttons
+  .ui.bottom.four.attached.icon.buttons
     .ui.reply.button(tabindex='0')
       i.reply.icon
-      |  Reply
+      |  评论
     .ui.flag.button(tabindex='0')
       i.flag.icon
-      |  Flag
+      |  举报
     .ui.labeled.button(tabindex='0')
       .ui.like.button(class=val.liked? "red": null)
         i.heart.icon
-        |  Like
+        |  喜欢
       a.ui.basic.red.left.pointing.label.count=val.likes
+    .ui.share.button(tabindex=val.shared ? '-1' : '0', class=val.shared ? 'red share-completed' : null, aria-disabled=val.shared ? 'true' : 'false', data-tooltip=val.shared ? '已转发' : '转发')
+      i.share.icon
+      |  转发
+  .ui.mini.modal.share-modal(data-share-delay=shareDelaySeconds, data-share-auto-action=shareAutoAction)
+    .header=shareModalTitle
+    .content
+      .share-prompt(data-base-prompt=sharePrompt, data-countdown-template=shareCountdownTemplate, data-action-text=shareActionText)=sharePrompt + (shareAutoAction !== 'none' ? shareCountdownTemplate.replace('{seconds}', String(shareDelaySeconds)).replace('{action}', shareActionText) : '')
+    .actions
+      button.ui.primary.share-confirm.button(type='button')=shareConfirmText
+      button.ui.button.share-cancel(type='button')=shareCancelText
   if val.comments.length > 0
     .content
       .ui.comments
@@ -51,17 +61,17 @@
                   .rating
                     i.heart.icon(class=comment.liked ? "red" : null)
                     span.num=comment.likes+(comment.liked ? 1 : 0)
-                    |  Likes
+                    |  个赞
                 .text=comment.body
                 .actions
-                  a.like.comment(class=comment.liked ? "red" : null ) !{comment.liked ? "Unlike" : "Like"}
+                  a.like.comment(class=comment.liked ? "red" : null )=comment.liked ? "取消喜欢" : "喜欢"
           //- Else this is a normal comment from the script
           else
             .comment(commentID=comment.id)
               .content(class=!comment.flagged ? "transition hidden" : "")                           
-                .text(style="background-color: black; color: white; padding: 0.2em;")  You flagged this comment. The admins will review this comment further. We are sorry you had this experience.
+                .text(style="background-color: black; color: white; padding: 0.2em;") 您已举报此评论，管理员会进一步审核，感谢您的反馈。
                 .actions 
-                  a.unflag Unflag
+                  a.unflag 取消举报
               a.avatar(href='/user/'+comment.actor.username, class=comment.flagged ? "transition hidden" : "")                  
                 img(src='/public/picture.svg', data-src=cdn+"/profile_pictures/"+comment.actor.profile.picture)
               .content(class=comment.flagged ? "transition hidden" : "")
@@ -71,11 +81,11 @@
                   .rating
                     i.heart.icon(class=comment.liked ? "red" : null)
                     span.num=comment.likes+(comment.liked ? 1 : 0)
-                    |  Likes
+                    |  个赞
                 .text=comment.body
                 .actions
-                  a.like.comment(class=comment.liked ? "red" : null ) !{comment.liked ? "Unlike" : "Like"}
-                  a.flag.comment Flag
+                  a.like.comment(class=comment.liked ? "red" : null )=comment.liked ? "取消喜欢" : "喜欢"
+                  a.flag.comment 举报
   .extra.content
     .ui.fluid.left.labeled.right.icon.input
       .ui.label
@@ -85,5 +95,5 @@
           img.ui.avatar.image.small(src=user.gravatar(60), name=user.profile.name || user.username || user.id)            
       .ui.form
         .field 
-          textarea.newcomment(type='text', placeholder='Write a Comment' rows='1')
+          textarea.newcomment(type='text', placeholder='写下你的评论' rows='1')
       i.big.send.link.icon

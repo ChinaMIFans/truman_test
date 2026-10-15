@@ -211,7 +211,6 @@ app.get('/info', passportConfig.isAuthenticated, function(req, res) {
 app.get('/tos', function(req, res) { res.render('tos', { title: 'Terms of Service' }); });
 
 app.get('/completed', passportConfig.isAuthenticated, userController.userTestResults);
-
 app.get('/notifications', passportConfig.isAuthenticated, notificationController.getNotifications);
 
 app.get('/login', userController.getLogin);

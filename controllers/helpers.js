@@ -32,6 +32,9 @@ function shuffle(array) {
  *  - finalfeed: the processed final feed of posts for the user
  */
 exports.getFeed = function(user_posts, script_feed, user, order, removeFlaggedContent, removedBlockedUserContent) {
+    const isBlockedActor = actor => Boolean(
+        actor && actor.username && Array.isArray(user.blocked) && user.blocked.includes(actor.username)
+    );
     // Array of posts for the final feed
     let finalfeed = [];
     // Array of seen and unseen posts, used when order=='shuffle' so that unseen posts appear before seen posts on the final feed.
@@ -105,9 +108,15 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeFlaggedCo
                                     }
                                 }
                             }
-                            // Check if this comment is by a blocked user: If true and removedBlockedUserContent is true, remove the comment.
-                            if (user.blocked.includes(commentObject.actor.username) && removedBlockedUserContent) {
-                                script_feed[0].comments.splice(script_feed[0].comments.indexOf(commentObject), 1);
+                            // The feedAction comment stores a comment ID, not an actor. Resolve the
+                            // comment from the populated Script post before checking its author.
+                            const actedOnCommentIndex = _.findIndex(
+                                script_feed[0].comments,
+                                comment => comment.id == commentObject.comment
+                            );
+                            if (removedBlockedUserContent && actedOnCommentIndex !== -1 &&
+                                isBlockedActor(script_feed[0].comments[actedOnCommentIndex].actor)) {
+                                script_feed[0].comments.splice(actedOnCommentIndex, 1);
                             }
                         }
                     }
@@ -124,6 +133,9 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeFlaggedCo
                     script_feed[0].liked = true;
                     script_feed[0].likes++;
                 }
+                if (user.feedAction[feedIndex].shared) {
+                    script_feed[0].shared = true;
+                }
                 // Check if this post has been flagged by the user. If true, update the post.
                 if (user.feedAction[feedIndex].flagged) {
                     script_feed[0].flagged = true;
@@ -132,7 +144,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeFlaggedCo
                 if (user.feedAction[feedIndex].flagged && removeFlaggedContent) {
                     script_feed.splice(0, 1);
                 } // Check if this post is by a blocked user: If true and removedBlockedUserContent is true, remove the post.
-                else if (user.blocked.includes(script_feed[0].actor.username) && removedBlockedUserContent) {
+                else if (isBlockedActor(script_feed[0].actor) && removedBlockedUserContent) {
                     script_feed.splice(0, 1);
                 } else {
                     // If the post is neither flagged or from a blocked user, add it to the final feed.
@@ -151,12 +163,12 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeFlaggedCo
                 }
             } // If the user has not interacted with this post:
             else {
-                if (user.blocked.includes(script_feed[0].actor.username) && removedBlockedUserContent) {
+                if (isBlockedActor(script_feed[0].actor) && removedBlockedUserContent) {
                     script_feed.splice(0, 1);
                 } else {
                     for (const commentObject of script_feed[0].comments) {
                         // Check if this comment is by a blocked user: If true and removedBlockedUserContent is true, remove the comment.
-                        if (user.blocked.includes(commentObject.actor.username) && removedBlockedUserContent) {
+                        if (isBlockedActor(commentObject.actor) && removedBlockedUserContent) {
                             script_feed[0].comments.splice(script_feed[0].comments.indexOf(commentObject), 1);
                         }
                     }

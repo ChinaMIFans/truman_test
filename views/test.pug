@@ -1,7 +1,7 @@
 extends ui_layout
 
 block styles 
-  link(type='text/css', rel='stylesheet', href='/public/css/script.css')
+  link(type='text/css', rel='stylesheet', href='/public/css/script.css?v=share-completed-20261012-1')
 
 block content
   .computer.only.tablet.only.four.wide.column 
@@ -33,22 +33,22 @@ block content
     
   .ui.tiny.post.modal
     i.close.icon
-    .header Add a New Post
+    .header 发布新帖子
     .scrolling.content
       form#postform.ui.feed.form(action='/post/new', method='POST', enctype='multipart/form-data')
         input(type='hidden', name='_csrf', value=_csrf)
         .field
-          textarea(rows='2', placeholder='Share your meal', name='body')
+          textarea(rows='2', placeholder='写下你想分享的内容', name='body')
         .field.image-upload
           label(for='picinput')
             .image.content
               img#imgInp.ui.fluid.image(src='/public/photo-camera.svg')
           input#picinput(type='file', accept='image/*', name='picinput')
     .actions
-      input.ui.green.button(type='submit', form='postform', value='Submit')
+      input.ui.green.button(type='submit', form='postform', value='发布')
           
 block scripts
   script().
     let numComments = !{JSON.stringify(user.numComments)};
   script(src='/public/js/script.js')
-  script(src='/public/js/postFunctionalities.js')
+  script(src='/public/js/postFunctionalities.js?v=zh-ui-20261014-1')

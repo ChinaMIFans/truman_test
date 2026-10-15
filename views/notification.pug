@@ -2,7 +2,7 @@ extends ui_layout
 
 block styles
   link(type='text/css', rel='stylesheet', href='/public/css/notification.css')
-  link(type='text/css', rel='stylesheet', href='/public/css/script.css')
+  link(type='text/css', rel='stylesheet', href='/public/css/script.css?v=share-completed-20261012-1')
 
 block content
   .computer.only.tablet.only.four.wide.column
@@ -151,4 +151,4 @@ block scripts
   script.
     let numComments = !{JSON.stringify(user.numComments)};
   script(src='/public/js/notification.js')
-  script(src='/public/js/postFunctionalities.js')
+  script(src='/public/js/postFunctionalities.js?v=zh-ui-20261014-1')

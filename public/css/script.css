@@ -35,6 +35,11 @@
     border-radius: 0 !important;
 }
 
+.ui.share.button.share-completed {
+    pointer-events: none;
+    cursor: default;
+}
+
 
 /* COMMMENT */
 

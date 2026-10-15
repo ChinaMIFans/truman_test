@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema({
         body: { type: String, default: '', trim: true }, // Text(body) of post
         picture: String, // Picture (file path) for post
         liked: { type: Boolean, default: false }, // Indicates if the user has liked the post
+        shared: { type: Boolean, default: false }, // Indicates if the user has shared the post
+        shareClickTime: [Date], // Absolute times when the user opened the share prompt
+        shareTime: [Date], // Absolute times when the user confirmed/auto-completed a share
+        shareCancelTime: [Date], // Absolute times when the user cancelled the share prompt
         likes: { type: Number, default: 0 }, // Indicates the number of likes on the post by actors (excludes the user's own like)
 
         // Comments on post
@@ -104,6 +108,10 @@ const userSchema = new mongoose.Schema({
         rereadTimes: { type: Number, default: 0 }, // Indicates the # of times the post has been viewed by user.
 
         liked: { type: Boolean, default: false }, // Indicates if the user has liked the post
+        shared: { type: Boolean, default: false }, // Indicates if the user has shared the post
+        shareClickTime: [Date], // Absolute times when the user opened the share prompt
+        shareTime: [Date], // Absolute times when the user confirmed/auto-completed a share
+        shareCancelTime: [Date], // Absolute times when the user cancelled the share prompt
         flagged: { type: Boolean, default: false }, // Indicates if the user has flagged the post
         likeTime: [Date], // List of absolute times when the user has liked the post
         unlikeTime: [Date], // List of absolute times when the user has unliked the post

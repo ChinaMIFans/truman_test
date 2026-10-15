@@ -6,6 +6,7 @@ const scriptSchema = new mongoose.Schema({
     body: { type: String, default: '', trim: true }, // Text (body) of post
     picture: String, // Picture (file path) for post
     likes: Number, // Indicates the number of likes on the post (randomly assigned in populate.js)
+    shared: { type: Boolean, default: false }, // Per-request display state populated from the current user's actions
     actor: { type: Schema.ObjectId, ref: 'Actor' }, // Actor of post
     time: Number, // Indicates when the post was created relative to how much time has passed since the user created their account, in milliseconds
 

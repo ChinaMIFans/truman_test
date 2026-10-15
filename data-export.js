@@ -1,29 +1,20 @@
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' });
 
-const Script = require('./models/Script.js');
+// Register the model referenced by User.feedAction.post before populating it.
+require('./models/Script.js');
 const User = require('./models/User.js');
-const Actor = require('./models/Actor.js');
 const mongoose = require('mongoose');
-const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 // Console.log color shortcuts
 const color_start = '\x1b[33m%s\x1b[0m'; // yellow
 const color_success = '\x1b[32m%s\x1b[0m'; // green
-const color_error = '\x1b[31m%s\x1b[0m'; // red
 
 /**
  * Connect to MongoDB.
  */
-mongoose.connect(process.env.MONGODB_URI);
-db = mongoose.connection;
-db.on('error', (err) => {
-    console.error(err);
-    console.log('%s MongoDB connection error. Please make sure MongoDB is running.');
-    process.exit();
-});
-console.log(color_success, `Successfully connected to db.`);
+const db = mongoose.connection;
 
 /*
   Gets the user models from the database, or folder of json files.
@@ -37,6 +28,8 @@ async function getUserJsons() {
 }
 
 async function getDataExport() {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log(color_success, `Successfully connected to db.`);
     const users = await getUserJsons();
     console.log(color_start, `Starting the data export script...`);
     const currentDate = new Date();
@@ -55,6 +48,12 @@ async function getDataExport() {
         { id: 'NumActorPostsFlagged', title: 'NumActorPostsFlagged' },
         { id: 'NumActorCommentsLiked', title: 'NumActorCommentsLiked' },
         { id: 'NumActorCommentsFlagged', title: 'NumActorCommentsFlagged' },
+        { id: 'NumUserPostsLiked', title: 'NumUserPostsLiked' },
+        { id: 'NumUserPostsShared', title: 'NumUserPostsShared' },
+        { id: 'NumUserPostCommentsLiked', title: 'NumUserPostCommentsLiked' },
+        { id: 'NumUserPostCommentsFlagged', title: 'NumUserPostCommentsFlagged' },
+        { id: 'NumActorPostsShared', title: 'NumActorPostsShared' },
+        { id: 'NumActorPostsViewed', title: 'NumActorPostsViewed' },
         { id: 'UserPostsCreated', title: 'UserPostsCreated' },
         { id: 'UserCommentsCreated', title: 'UserCommentsCreated' },
         { id: 'ActorPostsLiked', title: 'ActorPostsLiked' },
@@ -77,12 +76,20 @@ async function getDataExport() {
         const record = {}; //Record for the user
         record.Id = user.mturkID;
         record.Username = user.username;
-        record.Condition = user.group;
+        record.Condition = user.experimentalCondition;
 
         let userPostsCreated = "";
+        let NumUserPostsLiked = 0;
+        let NumUserPostsShared = 0;
+        let NumUserPostCommentsLiked = 0;
+        let NumUserPostCommentsFlagged = 0;
         for (const userPost of user.posts) {
             let string = userPost.body + ", on Day " + (Math.floor(userPost.relativeTime / 86400000) + 1) + "\r\n";
             userPostsCreated += string;
+            if (userPost.liked) NumUserPostsLiked++;
+            if (userPost.shared) NumUserPostsShared++;
+            NumUserPostCommentsLiked += userPost.comments.filter(comment => comment.liked && !comment.new_comment).length;
+            NumUserPostCommentsFlagged += userPost.comments.filter(comment => comment.flagged && !comment.new_comment).length;
         }
         record.NumUserPostsCreated = user.posts.length;
         record.UserPostsCreated = userPostsCreated;
@@ -91,7 +98,9 @@ async function getDataExport() {
             NumActorPostsFlagged = 0,
             NumUserCommentsCreated = 0,
             NumActorCommentsLiked = 0,
-            NumActorCommentsFlagged = 0;
+            NumActorCommentsFlagged = 0,
+            NumActorPostsShared = 0,
+            NumActorPostsViewed = 0;
         let ActorPostsLiked = [],
             ActorPostsFlagged = [],
             ActorCommentsLiked = [],
@@ -100,9 +109,11 @@ async function getDataExport() {
 
         //For each post (feedAction)
         for (const feedAction of user.feedAction) {
-            if (user.feedAction.post == null) {
+            if (!feedAction.post) {
                 continue;
             }
+            if (feedAction.shared) NumActorPostsShared++;
+            NumActorPostsViewed += feedAction.rereadTimes || 0;
             if (feedAction.liked) {
                 NumActorPostsLiked++;
                 ActorPostsLiked.push(feedAction.post.postID);
@@ -121,18 +132,16 @@ async function getDataExport() {
 
             const CommentsLiked_list = feedAction.comments.filter(comment => !comment.new_comment && comment.liked);
             NumActorCommentsLiked += CommentsLiked_list.length;
-            if (NumActorCommentsLiked > 0) {
-                for (const likedComment of CommentsLiked_list) {
-                    ActorCommentsLiked.push(feedAction.post.comments.find(comment => likedComment.comment.equals(comment._id)).commentID);
-                }
+            for (const likedComment of CommentsLiked_list) {
+                const matchedComment = feedAction.post.comments.find(comment => likedComment.comment && likedComment.comment.equals(comment._id));
+                if (matchedComment) ActorCommentsLiked.push(matchedComment.commentID);
             }
 
             const CommentsFlagged_list = feedAction.comments.filter(comment => !comment.new_comment && comment.flagged);
             NumActorCommentsFlagged += CommentsFlagged_list.length;
-            if (NumActorCommentsFlagged > 0) {
-                for (const flaggedComment of CommentsFlagged_list) {
-                    ActorCommentsFlagged.push(feedAction.post.comments.find(comment => flaggedComment.comment.equals(comment._id)).commentID);
-                }
+            for (const flaggedComment of CommentsFlagged_list) {
+                const matchedComment = feedAction.post.comments.find(comment => flaggedComment.comment && flaggedComment.comment.equals(comment._id));
+                if (matchedComment) ActorCommentsFlagged.push(matchedComment.commentID);
             }
         }
 
@@ -141,6 +150,12 @@ async function getDataExport() {
         record.NumActorPostsFlagged = NumActorPostsFlagged;
         record.NumActorCommentsLiked = NumActorCommentsLiked;
         record.NumActorCommentsFlagged = NumActorCommentsFlagged;
+        record.NumUserPostsLiked = NumUserPostsLiked;
+        record.NumUserPostsShared = NumUserPostsShared;
+        record.NumUserPostCommentsLiked = NumUserPostCommentsLiked;
+        record.NumUserPostCommentsFlagged = NumUserPostCommentsFlagged;
+        record.NumActorPostsShared = NumActorPostsShared;
+        record.NumActorPostsViewed = NumActorPostsViewed;
         record.UserCommentsCreated = UserCommentsCreated;
         record.ActorPostsLiked = ActorPostsLiked;
         record.ActorPostsFlagged = ActorPostsFlagged;
@@ -173,4 +188,8 @@ async function getDataExport() {
     console.log(color_start, 'Closed db connection.');
 }
 
-getDataExport();
+getDataExport().catch(async(err) => {
+    console.error('Data export failed:', err);
+    await mongoose.disconnect();
+    process.exitCode = 1;
+});

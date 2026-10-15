@@ -2,6 +2,7 @@ const Script = require('../models/Script.js');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const helpers = require('./helpers');
+const shareConfig = require('../config/share');
 const _ = require('lodash');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
@@ -20,7 +21,6 @@ exports.getScript = async(req, res, next) => {
         const user = await User.findById(req.user.id)
             .populate('posts.comments.actor')
             .exec();
-
         // If the user is no longer active, sign the user out.
         if (!user.active) {
             req.logout((err) => {
@@ -61,7 +61,11 @@ exports.getScript = async(req, res, next) => {
         // Get the newsfeed and render it.
         const finalfeed = helpers.getFeed(user_posts, script_feed, user, process.env.FEED_ORDER, (process.env.REMOVE_FLAGGED_CONTENT == 'TRUE'), true);
         console.log("Script Size is now: " + finalfeed.length);
-        res.render('script', { script: finalfeed, showNewPostIcon: true });
+        res.render('script', {
+            script: finalfeed,
+            showNewPostIcon: true,
+            ...shareConfig
+        });
     } catch (err) {
         next(err);
     }
@@ -147,6 +151,11 @@ exports.postUpdateFeedAction = async(req, res, next) => {
             feedIndex = user.feedAction.push(cat) - 1;
         }
 
+        const isShareAction = req.body.shareClick || req.body.share || req.body.shareCancel;
+        if (isShareAction && user.feedAction[feedIndex].shared) {
+            return res.send({ result: 'success', alreadyShared: true });
+        }
+
         // User created a new comment on the post.
         if (req.body.new_comment) {
             user.numComments = user.numComments + 1;
@@ -214,8 +223,19 @@ exports.postUpdateFeedAction = async(req, res, next) => {
         }
         // User interacted with the post.
         else {
+            if (req.body.shareClick) user.feedAction[feedIndex].shareClickTime.push(req.body.shareClick);
+            if (req.body.share) {
+                user.feedAction[feedIndex].shareTime.push(req.body.share);
+                user.feedAction[feedIndex].shared = true;
+            }
+            if (req.body.shareCancel) user.feedAction[feedIndex].shareCancelTime.push(req.body.shareCancel);
+
+            // Share events are logged separately from feed actions such as likes and views.
+            if (req.body.shareClick || req.body.share || req.body.shareCancel) {
+                // Share timestamps and shared state were recorded above.
+            }
             // User flagged the post.
-            if (req.body.flag) {
+            else if (req.body.flag) {
                 const flag = req.body.flag;
                 user.feedAction[feedIndex].flagTime.push(flag);
                 user.feedAction[feedIndex].flagged = true;
@@ -268,6 +288,10 @@ exports.postUpdateUserPostFeedAction = async(req, res, next) => {
         const user = await User.findById(req.user.id).exec();
         // Find the index of object in user.posts
         let feedIndex = _.findIndex(user.posts, function(o) { return o.postID == req.body.postID; });
+        const isShareAction = req.body.shareClick || req.body.share || req.body.shareCancel;
+        if (feedIndex != -1 && isShareAction && user.posts[feedIndex].shared) {
+            return res.send({ result: 'success', alreadyShared: true });
+        }
 
         if (feedIndex == -1) {
             // Should not happen.
@@ -310,6 +334,13 @@ exports.postUpdateUserPostFeedAction = async(req, res, next) => {
         }
         // User interacted with the post. 
         else {
+            if (req.body.shareClick) user.posts[feedIndex].shareClickTime.push(req.body.shareClick);
+            if (req.body.share) {
+                user.posts[feedIndex].shareTime.push(req.body.share);
+                user.posts[feedIndex].shared = true;
+            }
+            if (req.body.shareCancel) user.posts[feedIndex].shareCancelTime.push(req.body.shareCancel);
+
             // User liked the post.
             if (req.body.like) {
                 user.posts[feedIndex].liked = true;

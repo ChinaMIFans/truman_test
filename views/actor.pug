@@ -1,7 +1,7 @@
 extends ui_layout
 
 block styles
-  link(type='text/css', rel='stylesheet', href='/public/css/script.css')
+  link(type='text/css', rel='stylesheet', href='/public/css/script.css?v=share-completed-20261012-1')
   
 block content
   .computer.only.tablet.only.four.wide.column
@@ -19,13 +19,13 @@ block content
         .ui.basic.primary.follow.button(style=" margin-top: 15px", actor_un = actor.username)
           if user.followed.includes(actor.username)
             i.check.icon 
-            | Following
+            | 已关注
           else 
-            | Follow
+            | 关注
       .two.ui.bottom.attached.icon.buttons
-        button.ui.button.block(data-tooltip='Block User', data-position='bottom left', username=actor.username)
+        button.ui.button.block(data-tooltip='屏蔽用户', data-position='bottom left', username=actor.username)
           i.ban.icon
-        button.ui.button.report(data-tooltip='Report User', data-position='bottom right', username=actor.username)
+        button.ui.button.report(data-tooltip='举报用户', data-position='bottom right', username=actor.username)
           i.flag.icon
 
   #loading.eight.wide.computer.ten.wide.tablet.sixteen.wide.mobile.column
@@ -43,58 +43,58 @@ block content
     i.close.icon
     .header 
       i.flag.icon 
-      |  Report This User
+      |  举报此用户
     .content
       form#reportform.ui.reply.form(action='/user', method='POST')
         input(type='hidden', name='_csrf', value=_csrf)
         input(type='hidden', name='reported', value=actor.username)
         .ui.form.large
           .grouped.fields
-            label(for='report_issue') Help us understand the issue. What's the problem with this account?
+            label(for='report_issue') 请告诉我们此账号存在什么问题：
             .field
               .ui.radio.checkbox
                 input.hidden(type='radio', name='report_issue', value="interested", tabindex='0')
-                label I'm not interested in this account.
+                label 我对这个账号发布的内容不感兴趣
             .field
               .ui.radio.checkbox
                 input.hidden(type='radio', name='report_issue', value="spam",tabindex='0')
-                label They are posting spam.
+                label 此账号发布垃圾信息
             .field
               .ui.radio.checkbox
                 input.hidden(type='radio', name='report_issue', value="bully", tabindex='0')
-                label They're being abusive or harmful.
+                label 此账号存在辱骂或伤害他人的行为
             .field
               .ui.radio.checkbox
                 input.hidden(type='radio', name='report_issue', value="hacked", tabindex='0')
-                label Their account may be hacked.          
+                label 此账号可能已被盗用
     .actions
-      input.ui.green.button.disabled(type='submit', value='Submit', form='reportform')
+      input.ui.green.button.disabled(type='submit', value='提交举报', form='reportform')
   .ui.small.second.coupled.modal
     .header
-      | Your Report Has Been Sent!
+      | 举报已提交
     .content
       .description
-        p This user has been reported to the admins. Thank you for helping the community!
+        p 已向管理员提交对此用户的举报，感谢您帮助维护社区。
     .actions
       .ui.approve.green.button
         i.checkmark.icon
-        | Continue
+        | 继续
   .ui.small.basic.blocked.modal
     .ui.icon.header
       i.ban.icon
-      | You Have Blocked This User
+      | 您已屏蔽此用户
     .content
-      p You will no longer see posts or comments from this user. You can choose to report this user or un-block them. 
+      p 您将不再看到此用户发布的帖子或评论。您也可以举报此用户或取消屏蔽。
     .actions
       .ui.left.floated.red.inverted.button
         i.flag.icon
-        | Report User
+        | 举报用户
       .ui.home.inverted.button
         i.home.icon
-        | Go Back to Homepage
+        | 返回首页
       .ui.green.ok.inverted.button
         i.undo.icon
-        | Un-Block User
+        | 取消屏蔽
   .computer.only.tablet.only.four.wide.column 
                      
 block scripts
@@ -103,4 +103,4 @@ block scripts
     let isBlocked = !{JSON.stringify(isBlocked)};
     let isReported = !{JSON.stringify(isReported)};
   script(src='/public/js/actor.js')
-  script(src='/public/js/postFunctionalities.js')
+  script(src='/public/js/postFunctionalities.js?v=zh-ui-20261014-1')

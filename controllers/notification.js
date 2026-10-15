@@ -2,6 +2,7 @@ const Script = require('../models/Script.js');
 const User = require('../models/User');
 const Notification = require('../models/Notification.js');
 const helpers = require('./helpers');
+const shareConfig = require('../config/share');
 const _ = require('lodash');
 
 /**
@@ -213,7 +214,8 @@ exports.getNotifications = async(req, res) => {
                 return res.render('notification', {
                     notification_feed: final_notify,
                     script: finalfeed,
-                    count: newNotificationCount
+                    count: newNotificationCount,
+                    ...shareConfig
                 })
             }
         };

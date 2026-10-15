@@ -12,15 +12,25 @@
     img(src='/user_post/'+val.picture)
   .content
     .description=val.body
-  .two.ui.bottom.attached.icon.buttons
+  .three.ui.bottom.attached.icon.buttons
     .ui.reply.button(tabindex='0')
       i.reply.icon
-      |  Reply
+      |  评论
     .ui.labeled.button(tabindex='0')
       .ui.like.button(class=val.liked ? "red" : null)
         i.heart.icon
-        |  Like
-      a.ui.basic.red.left.pointing.label.count=val.likes+(val.liked ? 1 : 0)      
+        |  喜欢
+      a.ui.basic.red.left.pointing.label.count=val.likes+(val.liked ? 1 : 0)
+    .ui.share.button(tabindex=val.shared ? '-1' : '0', class=val.shared ? 'red share-completed' : null, aria-disabled=val.shared ? 'true' : 'false', data-tooltip=val.shared ? '已转发' : '转发')
+      i.share.icon
+      |  转发
+  .ui.mini.modal.share-modal(data-share-delay=shareDelaySeconds, data-share-auto-action=shareAutoAction)
+    .header=shareModalTitle
+    .content
+      .share-prompt(data-base-prompt=sharePrompt, data-countdown-template=shareCountdownTemplate, data-action-text=shareActionText)=sharePrompt + (shareAutoAction !== 'none' ? shareCountdownTemplate.replace('{seconds}', String(shareDelaySeconds)).replace('{action}', shareActionText) : '')
+    .actions
+      button.ui.primary.share-confirm.button(type='button')=shareConfirmText
+      button.ui.button.share-cancel(type='button')=shareCancelText
   if val.comments.length > 0
     .content
       .ui.comments
@@ -41,10 +51,10 @@
                     .rating
                       i.heart.icon(class=comment.liked ? "red" : null)
                       span.num=comment.likes+(comment.liked ? 1 : 0)
-                      |  Likes
+                      |  个赞
                   .text=comment.body
                   .actions
-                    a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
+                    a.like.comment(class=comment.liked ? "red" : null)=comment.liked ? "取消喜欢" : "喜欢"
             //- Else this is a normal comment from the script
             else
               .comment(commentID=comment.commentID)
@@ -57,11 +67,11 @@
                     .rating
                       i.heart.icon(class=comment.liked ? "red" : null)
                       span.num=comment.likes+(comment.liked ? 1 : 0)
-                      |  Likes
+                      |  个赞
                   .text=comment.body
                   .actions
-                    a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
-                    a.flag.comment Flag
+                    a.like.comment(class=comment.liked ? "red" : null)=comment.liked ? "取消喜欢" : "喜欢"
+                    a.flag.comment 举报
   .extra.content
     .ui.fluid.left.labeled.right.icon.input
       .ui.label
@@ -71,5 +81,5 @@
           img.ui.avatar.image.small(src=user.gravatar(60), name=user.profile.name || user.username || user.id)            
       .ui.form
         .field 
-          textarea.newcomment(type='text', placeholder='Write a Comment' rows='1')
+          textarea.newcomment(type='text', placeholder='写下你的评论' rows='1')
       i.big.send.link.icon
