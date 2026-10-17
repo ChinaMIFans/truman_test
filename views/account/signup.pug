@@ -5,34 +5,34 @@ block content
     img.ui.fluid.image(src=process.env.SITE_PICTURE)
   .eight.wide.computer.eight.wide.tablet.sixteen.wide.mobile.column
     .ui.card.fluid(style="padding: 20px; margin-top: 90px;")
-      h2.ui.header Sign Up
+      h2.ui.header 注册
       form.ui.form(id='signup-form', action=(process.env.POST_SURVEY_WITH_QUALTRICS ? `/signup?r_id=${r_id}`: '/signup'), method='POST')
         input(type='hidden', name='_csrf', value=_csrf)
         .field
-          label(for='username') Username
-          input(type='text', name='username', id='username', placeholder='Username', autofocus, required)
+          label(for='username') 用户名
+          input(type='text', name='username', id='username', placeholder='请输入用户名', autofocus, required)
         .field
-          label(for='mturkID') !{process.env.IDENTIFIER}
-          input(type='text', name='mturkID', id='mturkID', placeholder=process.env.IDENTIFIER, required)
+          label(for='mturkID') 参与者编号
+          input(type='text', name='mturkID', id='mturkID', placeholder='请输入参与者编号', required)
         .field
-          label(for='email') Email (will not be publicly displayed)
-          input(type='email', name='email', id='email', placeholder='Email', required)
+          label(for='email') 邮箱（不会公开显示）
+          input(type='email', name='email', id='email', placeholder='请输入邮箱', required)
         .field
-          label(for='password') Password
-          input(type='password', name='password', id='password', placeholder='Password', minlength="4", required)
+          label(for='password') 密码
+          input(type='password', name='password', id='password', placeholder='请输入密码', minlength="4", required)
         .field
-          label(for='confirmPassword') Confirm Password 
-          input(type='password', name='confirmPassword', id='confirmPassword', placeholder='Confirm Password', minlength="4", required)
+          label(for='confirmPassword') 确认密码
+          input(type='password', name='confirmPassword', id='confirmPassword', placeholder='请再次输入密码', minlength="4", required)
           span(style="color: green; visibility:hidden; display: inline-block;")#passwordsMatch  
             i.icon.check 
-            | Passwords Match
+            | 两次输入的密码一致
         .field
           .ui.checkbox
             input(type='checkbox', name='tos', tabindex="0", id='tos', required)
             label(for='tos')
-              | I agree to the 
-              a(href='/tos', target="_blank") Terms and Conditions.
-        button.ui.large.button(type='submit') Sign Up
+              | 我已阅读并同意
+              a(href='/tos', target="_blank") 服务条款
+        button.ui.large.button(type='submit') 注册
 
 block scripts
   script(src='/public/js/profile.js')

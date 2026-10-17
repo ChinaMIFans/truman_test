@@ -15,9 +15,9 @@ block content
       .ui.fluid.card
         .content
           .description
-          |  You have no notifications at this time.
+          |  暂无通知。
     else
-      h3 Notifications (!{count})
+      h3 通知（!{count}）
       each notification in notification_feed
         .ui.raised.segment(correspondingPost=notification.postID, class = !notification.unreadNotification ? "read": "")
           .ui.feed
@@ -37,14 +37,14 @@ block content
                     if best.length == 1
                       .summary
                         a(href='/user/'+best[0].username)=best[0].profile.name
-                        |   has read your post. 
+                        |   读过你的动态。
                         .date=notification.time
                     else 
                       .summary
                         a(href='/user/'+best[0].username)=best[0].profile.name
-                        |  and 
-                        a(key=notification.key)=(best.length+notification.actors.length-1)+" others "
-                        | have read your post.  
+                        | 等
+                        a(key=notification.key)=(best.length+notification.actors.length-1)+" 人"
+                        | 读过你的动态。
                         .date=notification.time
               when 'like'
                 - var best = notification.actors.splice(0, 5);
@@ -60,12 +60,11 @@ block content
                     .summary
                       a(href='/user/'+best[0].username)=best[0].profile.name
                       if best.length != 1
-                        |  and 
-                        a.others(key=notification.key)=(best.length+notification.actors.length-1)+" others"
-                        |  have
-                      else 
-                        |  has
-                      |  liked your post. 
+                        | 等
+                        a.others(key=notification.key)=(best.length+notification.actors.length-1)+" 人"
+                        | 赞了你的动态。
+                      else
+                        | 赞了你的动态。
                       .date=notification.time
               when 'reply'
                 .event
@@ -79,7 +78,7 @@ block content
                     .summary
                       a(href='/user/'+notification.actor.username)
                         span=notification.actor.profile.name
-                      |  has commented on your post.
+                      | 评论了你的动态。
                       .date=notification.time
                     .extra.text=notification.replyBody
               when 'reply_read'
@@ -98,12 +97,12 @@ block content
                     .summary
                       a(href='/user/'+best[0].username)=best[0].profile.name
                       if best.length == 1
-                        |  has 
+                        | 读过
                       else 
-                        |  and 
-                        a(key=notification.key)=(best.length+notification.actors.length-1)+" others "
-                        | have 
-                      | read your reply to #{notification.originalActor.profile.name}'s post:
+                        | 等
+                        a(key=notification.key)=(best.length+notification.actors.length-1)+" 人"
+                        | 读过
+                      | #{notification.originalActor.profile.name} 发布的动态中的评论：
                       .date=notification.time
                     .extra.text=notification.body
               when 'reply_like'
@@ -121,12 +120,12 @@ block content
                     .summary
                       a(href='/user/'+best[0].username)=best[0].profile.name
                       if best.length == 1
-                        |  has 
+                        | 赞了
                       else 
-                        |  and 
-                        a(key=notification.key)=(best.length+notification.actors.length-1)+" others "
-                        | have 
-                      | liked your reply to #{notification.originalActor.profile.name}'s post:
+                        | 等
+                        a(key=notification.key)=(best.length+notification.actors.length-1)+" 人"
+                        | 赞了
+                      | 赞了 #{notification.originalActor.profile.name} 发布的动态中的评论：
                       .date=notification.time
                     .extra.text=notification.body                                                
               
@@ -137,14 +136,14 @@ block content
           .ui.segment
             include ./partials/userPost
             .actions
-              .ui.positive.button Back
+              .ui.positive.button 返回
       else 
         //- This is an Actor post
         .ui.tiny.long.modal(correspondingPost=val._id)
           .ui.segment
             include ./partials/actorPost
             .actions
-              .ui.positive.button Back
+              .ui.positive.button 返回
   .computer.only.tablet.only.two.wide.column 
 
 block scripts 

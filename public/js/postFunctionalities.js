@@ -48,20 +48,35 @@ function sharePost(e) {
     const target = $(e.target).closest('.ui.share.button');
     if (target.hasClass('share-completed') || target.hasClass('red')) return;
     const card = target.closest('.ui.fluid.card');
+    const postType = card.attr('type');
+    const path = postType === 'userPost' ? '/userPost_feed' : '/feed';
+    const postID = card.attr('postID');
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    const postCondition = card.attr('postCondition');
+
+    if (card.attr('data-share-popup') === 'false') {
+        const clickedAt = Date.now();
+        const directPayload = { postID: postID, shareClick: clickedAt, share: clickedAt, _csrf: csrfToken };
+        if (postType !== 'userPost') directPayload.postCondition = postCondition;
+        $.post(path, directPayload).done(function() {
+            target.addClass('red share-completed')
+                .attr({ 'aria-disabled': 'true', tabindex: '-1', 'data-tooltip': '已转发' });
+        });
+        return;
+    }
+
     let modal = card.data('shareModal');
     if (!modal || !modal.length) {
         modal = card.find('.share-modal');
         card.data('shareModal', modal);
         modal.detach().appendTo('body');
     }
-    const postType = card.attr('type');
-    const path = postType === 'userPost' ? '/userPost_feed' : '/feed';
     const payload = {
-        postID: card.attr('postID'),
+        postID: postID,
         shareClick: Date.now(),
-        _csrf: $('meta[name="csrf-token"]').attr('content')
+        _csrf: csrfToken
     };
-    if (postType !== 'userPost') payload.postCondition = card.attr('postCondition');
+    if (postType !== 'userPost') payload.postCondition = postCondition;
 
     modal.data('sharePath', path).data('sharePayload', payload).data('shareCard', card);
     modal.data('shareFinished', false);
@@ -86,7 +101,18 @@ function sharePost(e) {
         const actionPayload = Object.assign({}, modal.data('sharePayload'));
         delete actionPayload.shareClick;
         actionPayload[action] = Date.now();
-        $.post(modal.data('sharePath'), actionPayload).done(function() {
+        const shareCard = modal.data('shareCard');
+        const shareButton = shareCard.find('.ui.share.button');
+
+        // Close the prompt immediately; save the action in the background.
+        modal.removeClass('active visible').hide();
+        modal.data('shareOverlay').remove();
+        if (confirmed) {
+            shareButton.addClass('red share-completed')
+                .attr({ 'aria-disabled': 'true', tabindex: '-1', 'data-tooltip': '已转发' });
+        }
+
+        const shareRequest = $.post(modal.data('sharePath'), actionPayload).done(function() {
             if (confirmed) {
                 modal.data('shareCard').find('.ui.share.button')
                     .addClass('red share-completed')
@@ -94,6 +120,12 @@ function sharePost(e) {
             }
             modal.removeClass('active visible').hide();
             modal.data('shareOverlay').remove();
+        });
+        shareRequest.fail(function() {
+            if (confirmed) {
+                shareButton.removeClass('red share-completed')
+                    .attr({ 'aria-disabled': 'false', tabindex: '0', 'data-tooltip': '转发' });
+            }
         });
     };
     modal.data('shareFinish', finish);

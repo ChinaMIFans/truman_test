@@ -5,13 +5,13 @@ block content
     table.ui.celled.padded.table
       thead
         tr
-          th.single.line E-mail
+          th.single.line 邮箱
           th MTurk ID
-          th Start Date (ET)
-          th Active?
-          th Approximate total time on site
-          th # of Posts
-          th # of Comments
+          th 开始时间（美东）
+          th 是否活跃
+          th 网站累计时长（约）
+          th 动态数
+          th 评论数
       each u in users
         tbody
           tr
@@ -19,6 +19,6 @@ block content
             td.single.line=u.mturkID
             td=u.createdAt.toLocaleString("en-US", {timeZone: "America/New_York"})
             td=u.active
-            td=Math.round(u.pageTimes.reduce((partialSum, a) => partialSum + a, 0)/1000/60)+" minutes"
+            td=Math.round(u.pageTimes.reduce((partialSum, a) => partialSum + a, 0)/1000/60)+" 分钟"
             td=u.numPosts + 1
             td=u.numComments + 1

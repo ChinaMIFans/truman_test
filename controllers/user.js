@@ -3,6 +3,8 @@ const validator = require('validator');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
 const User = require('../models/User');
+const shareConfig = require('../config/share');
+const { getRulesForCondition } = require('../config/experimentRules');
 
 /**
  * GET /login
@@ -13,7 +15,7 @@ exports.getLogin = (req, res) => {
         return res.redirect('/');
     }
     res.render('account/login', {
-        title: 'Login',
+        title: '登录',
         site_picture: process.env.SITE_PICTURE,
         r_id: req.query.r_id
     });
@@ -25,8 +27,8 @@ exports.getLogin = (req, res) => {
  */
 exports.postLogin = (req, res, next) => {
     const validationErrors = [];
-    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: 'Please enter a valid email address.' });
-    if (validator.isEmpty(req.body.password)) validationErrors.push({ msg: 'Password cannot be blank.' });
+    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: '请输入有效的邮箱地址。' });
+    if (validator.isEmpty(req.body.password)) validationErrors.push({ msg: '密码不能为空。' });
 
     if (validationErrors.length) {
         req.flash('errors', validationErrors);
@@ -85,7 +87,7 @@ exports.getSignup = (req, res) => {
         return res.redirect('/');
     }
     res.render('account/signup', {
-        title: 'Create Account',
+        title: '创建账号',
         r_id: req.query.r_id
     });
 };
@@ -96,9 +98,9 @@ exports.getSignup = (req, res) => {
  */
 exports.postSignup = async(req, res, next) => {
     const validationErrors = [];
-    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: 'Please enter a valid email address.' });
-    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
-    if (validator.escape(req.body.password) !== validator.escape(req.body.confirmPassword)) validationErrors.push({ msg: 'Passwords do not match.' });
+    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: '请输入有效的邮箱地址。' });
+    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: '密码至少需要 4 个字符。' });
+    if (validator.escape(req.body.password) !== validator.escape(req.body.confirmPassword)) validationErrors.push({ msg: '两次输入的密码不一致。' });
     if (validationErrors.length) {
         req.flash('errors', validationErrors);
         return res.redirect('/signup');
@@ -114,9 +116,17 @@ exports.postSignup = async(req, res, next) => {
         /*###############################
         Place Experimental Varibles Here!
         ###############################*/
-        const numConditions = process.env.NUM_EXP_CONDITIONS;
-        const experimentalConditionNames = process.env.EXP_CONDITIONS_NAMES.split(",");
-        const experimentalCondition = experimentalConditionNames[Math.floor(Math.random() * numConditions)];
+        const experimentalConditionNames = String(process.env.EXP_CONDITIONS_NAMES || '')
+            .split(',')
+            .map(name => name.trim())
+            .filter(Boolean);
+        if (experimentalConditionNames.length === 0) {
+            req.flash('errors', { msg: '实验分组尚未配置，请联系研究人员。' });
+            return res.redirect('/signup');
+        }
+        const experimentalCondition = experimentalConditionNames[
+            Math.floor(Math.random() * experimentalConditionNames.length)
+        ];
 
         const surveyLink = process.env.POST_SURVEY ?
             process.env.POST_SURVEY +
@@ -168,7 +178,7 @@ exports.postSignupInfo = async(req, res, next) => {
         }
 
         await user.save();
-        req.flash('success', { msg: 'Profile information has been updated.' });
+        req.flash('success', { msg: '个人资料已更新。' });
         return res.redirect('/com');
     } catch (err) {
         next(err);
@@ -197,7 +207,7 @@ exports.postConsent = async(req, res, next) => {
  */
 exports.getAccount = (req, res) => {
     res.render('account/profile', {
-        title: 'Account Management'
+        title: '账号管理'
     });
 };
 
@@ -209,7 +219,12 @@ exports.getMe = async(req, res) => {
     try {
         const user = await User.findById(req.user.id).populate('posts.comments.actor').exec();
         const allPosts = user.getPosts();
-        res.render('me', { posts: allPosts, title: user.profile.name || user.email || user.id });
+        res.render('me', {
+            posts: allPosts,
+            title: user.profile.name || user.email || user.id,
+            ...(await getRulesForCondition(user.experimentalCondition)),
+            ...shareConfig
+        });
     } catch (err) {
         next(err);
     }
@@ -221,7 +236,7 @@ exports.getMe = async(req, res) => {
  */
 exports.postUpdateProfile = async(req, res, next) => {
     const validationErrors = [];
-    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: 'Please enter a valid email address.' });
+    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: '请输入有效的邮箱地址。' });
     if (validationErrors.length) {
         req.flash('errors', validationErrors);
         return res.redirect('/account');
@@ -238,7 +253,7 @@ exports.postUpdateProfile = async(req, res, next) => {
         }
 
         await user.save();
-        req.flash('success', { msg: 'Profile information has been updated.' });
+        req.flash('success', { msg: '个人资料已更新。' });
         res.redirect('/account');
     } catch (err) {
         if (err.code === 11000) {
@@ -255,8 +270,8 @@ exports.postUpdateProfile = async(req, res, next) => {
  */
 exports.postUpdatePassword = async(req, res, next) => {
     const validationErrors = [];
-    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
-    if (validator.escape(req.body.password) !== validator.escape(req.body.confirmPassword)) validationErrors.push({ msg: 'Passwords do not match.' });
+    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: '密码至少需要 4 个字符。' });
+    if (validator.escape(req.body.password) !== validator.escape(req.body.confirmPassword)) validationErrors.push({ msg: '两次输入的密码不一致。' });
 
     if (validationErrors.length) {
         req.flash('errors', validationErrors);
@@ -266,7 +281,7 @@ exports.postUpdatePassword = async(req, res, next) => {
         const user = await User.findById(req.user.id).exec();
         user.password = req.body.password;
         await user.save();
-        req.flash('success', { msg: 'Password has been changed.' });
+        req.flash('success', { msg: '密码已修改。' });
         res.redirect('/account');
     } catch (err) {
         next(err);
@@ -317,7 +332,7 @@ exports.getForgot = (req, res) => {
         return res.redirect('/');
     }
     res.render('account/forgot', {
-        title: 'Forgot Password',
+        title: '忘记密码',
         email: process.env.RESEARCHER_EMAIL
     });
 };

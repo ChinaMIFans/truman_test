@@ -2,20 +2,20 @@ extends ui_layout
 
 block content
   .ui.text.container(style="margin-top: 2em; margin-bottom: 2em;")
-    h1(style="text-align: center;") Welcome to EatSnap.Love!
-    h3 Here's what you can do on the site.
+    h1(style="text-align: center;") 欢迎来到小蓝书！
+    h3 你可以在这里：
     ul
-        li Create new posts! Upload existing photos or take new photos with your phone.
-        li Reply to others' posts to get a conversation going.
-        li Like others' posts to show you love their snaps!
-        li Fill out your profile. You can add as much or as little info as you want.
-        li When the Notification Bell is red, that means you have new Notifications, be sure to check them out!
+        li 发布动态！上传已有照片，或用手机拍摄新照片。
+        li 回复其他人的动态，参与交流。
+        li 点赞其他人的动态，表达你的喜爱。
+        li 完善个人资料，填写多少由你决定。
+        li 通知铃铛变红时，表示你有新通知，记得查看。
     img.ui.centered.image(src='/public/esl-howto.png')
-    h3 See who else is around.
-    p We'll notify you if someone replies to or likes your post or comment.
+    h3 看看还有谁在这里
+    p 有人回复或点赞你的动态或评论时，我们会通知你。
     .ui.big.green.labeled.icon.button.interest
         i.rocket.icon
-        |   Continue
+        |   继续
 
     script.
         $('.ui.big.green.labeled.icon.button.interest').on('click', function() {

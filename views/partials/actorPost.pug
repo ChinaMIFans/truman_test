@@ -1,4 +1,4 @@
-.ui.fluid.card(postCondition=val.condition, postID=val.id, type='actor', actor_un = val.actor.username, actor_name = val.actor.profile.name, actor_pic = val.actor.profile.picture)
+.ui.fluid.card(postCondition=val.condition, postID=val.id, type='actor', actor_un = val.actor.username, actor_name = val.actor.profile.name, actor_pic = val.actor.profile.picture, data-share-popup=showSharePopup ? 'true' : 'false')
   .content
     .right.floated.time.meta= (user.createdAt.getTime() + val.time)
     a(href='/user/'+val.actor.username)     
@@ -35,13 +35,14 @@
     .ui.share.button(tabindex=val.shared ? '-1' : '0', class=val.shared ? 'red share-completed' : null, aria-disabled=val.shared ? 'true' : 'false', data-tooltip=val.shared ? '已转发' : '转发')
       i.share.icon
       |  转发
-  .ui.mini.modal.share-modal(data-share-delay=shareDelaySeconds, data-share-auto-action=shareAutoAction)
-    .header=shareModalTitle
-    .content
-      .share-prompt(data-base-prompt=sharePrompt, data-countdown-template=shareCountdownTemplate, data-action-text=shareActionText)=sharePrompt + (shareAutoAction !== 'none' ? shareCountdownTemplate.replace('{seconds}', String(shareDelaySeconds)).replace('{action}', shareActionText) : '')
-    .actions
-      button.ui.primary.share-confirm.button(type='button')=shareConfirmText
-      button.ui.button.share-cancel(type='button')=shareCancelText
+  if showSharePopup
+    .ui.mini.modal.share-modal(data-share-delay=shareDelaySeconds, data-share-auto-action=shareAutoAction)
+      .header=shareModalTitle
+      .content
+        .share-prompt(data-base-prompt=sharePrompt, data-countdown-template=shareCountdownTemplate, data-action-text=shareActionText)=sharePrompt + (shareAutoAction !== 'none' ? shareCountdownTemplate.replace('{seconds}', String(shareDelaySeconds)).replace('{action}', shareActionText) : '')
+      .actions
+        button.ui.primary.share-confirm.button(type='button')=shareConfirmText
+        button.ui.button.share-cancel(type='button')=shareCancelText
   if val.comments.length > 0
     .content
       .ui.comments

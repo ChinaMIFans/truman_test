@@ -16,21 +16,21 @@ $(window).on("load", function() {
                 identifier: 'body',
                 rules: [{
                     type: 'empty',
-                    prompt: 'Please add some text about your meal.'
+                    prompt: '请填写你想分享的内容。'
                 }]
             },
             picinput: {
                 identifier: 'picinput',
                 rules: [{
                     type: 'notExactly[/public/photo-camera.svg]',
-                    prompt: 'Please click on the Camera Icon to add a photo.'
+                    prompt: '请点击相机图标添加照片。'
                 }]
             }
         },
         onSuccess: function(event, fields) {
             $("#postform")[0].submit();
             $('.actions .ui.green.button').addClass('disabled');
-            $('.actions .ui.green.button').val('Posting...');
+            $('.actions .ui.green.button').val('正在发布…');
         }
     });
 });

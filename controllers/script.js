@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const helpers = require('./helpers');
 const shareConfig = require('../config/share');
+const { getRulesForCondition } = require('../config/experimentRules');
 const _ = require('lodash');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
@@ -28,7 +29,7 @@ exports.getScript = async(req, res, next) => {
                 req.session.destroy((err) => {
                     if (err) console.log('Error : Failed to destroy the session during logout.', err);
                     req.user = null;
-                    req.flash('errors', { msg: 'Account is no longer active. Study is over.' });
+                    req.flash('errors', { msg: '账号已停用，研究已结束。' });
                     res.redirect('/login' + (req.query.r_id ? `?r_id=${req.query.r_id}` : ""));
                 });
             });
@@ -64,6 +65,7 @@ exports.getScript = async(req, res, next) => {
         res.render('script', {
             script: finalfeed,
             showNewPostIcon: true,
+            ...(await getRulesForCondition(user.experimentalCondition)),
             ...shareConfig
         });
     } catch (err) {
@@ -124,7 +126,7 @@ exports.newPost = async(req, res) => {
             await user.save();
             res.redirect('/');
         } else {
-            req.flash('errors', { msg: 'ERROR: Your post did not get sent. Please include a photo and a caption.' });
+            req.flash('errors', { msg: '动态发布失败，请添加照片和文字说明。' });
             res.redirect('/');
         }
     } catch (err) {

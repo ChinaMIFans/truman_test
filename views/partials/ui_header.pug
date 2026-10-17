@@ -5,8 +5,8 @@
         img.ui.tiny.image(src=process.env.SITE_LOGO, id='logo')
       .right.menu
         if !user
-          a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/login?r_id=${r_id}`: '/login') Log In
-          a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/signup?r_id=${r_id}`: '/signup') Create Account
+          a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/login?r_id=${r_id}`: '/login') 登录
+          a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/signup?r_id=${r_id}`: '/signup') 创建账号
         else
           if user.consent
             if(showNewPostIcon)
@@ -24,20 +24,20 @@
             i.dropdown.icon
             .left.menu
               if user.consent
-                a.item(href='/me') My Profile
-                a.item(href='/account') Update My Profile
+                a.item(href='/me') 我的主页
+                a.item(href='/account') 编辑个人资料
                 if user.isAdmin
-                  a.item(href='/completed') Study Progress
-                  a.item(href='/actors') Simulation (Actors)
-                a.item(href='/com') View Community Rules
-              a.item.logoutLink Log Out
+                  a.item(href='/completed') 研究进度
+                  a.item(href='/actors') 模拟账号
+                a.item(href='/com') 社区规范
+              a.item.logoutLink 退出登录
 .mobile.only.row
   .ui.fluid.top.fixed.four.item.menu
     a.item(href=user===undefined ? (process.env.POST_SURVEY_WITH_QUALTRICS ? `/?r_id=${r_id}`: '/' ): (user.consent ? "/": "#"))
       img.ui.tiny.image(src=process.env.SITE_LOGO, id='mobile_logo')
     if !user
-      a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/login?r_id=${r_id}`: '/login') Log In
-      a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/signup?r_id=${r_id}`: '/signup') Create Account
+      a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/login?r_id=${r_id}`: '/login') 登录
+      a.item(href=process.env.POST_SURVEY_WITH_QUALTRICS ? `/signup?r_id=${r_id}`: '/signup') 创建账号
     else
       if user.consent
         if(showNewPostIcon)
@@ -56,10 +56,10 @@
         i.dropdown.icon
         .left.menu
           if user.consent
-            a.item(href='/me') My Profile
-            a.item(href='/account') Update My Profile
+            a.item(href='/me') 我的主页
+            a.item(href='/account') 编辑个人资料
             if user.isAdmin
-              a.item(href='/completed') Study Progress
-              a.item(href='/actors') Simulation (Actors)
-            a.item(href='/com') View Community Rules
-          a.item.logoutLink Log Out
+              a.item(href='/completed') 研究进度
+              a.item(href='/actors') 模拟账号
+            a.item(href='/com') 社区规范
+          a.item.logoutLink 退出登录

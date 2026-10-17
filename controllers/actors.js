@@ -3,6 +3,7 @@ const Script = require('../models/Script.js');
 const User = require('../models/User');
 const helpers = require('./helpers');
 const shareConfig = require('../config/share');
+const { getRulesForCondition } = require('../config/experimentRules');
 const _ = require('lodash');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
@@ -58,6 +59,7 @@ exports.getActor = async(req, res, next) => {
             isBlocked: isBlocked,
             isReported: isReported,
             title: actor.profile.name,
+            ...(await getRulesForCondition(user.experimentalCondition)),
             ...shareConfig
         });
     } catch (err) {

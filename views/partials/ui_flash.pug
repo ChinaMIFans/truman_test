@@ -22,9 +22,10 @@ if messages.final
       i.trophy.icon
       .content
         .header
-          | Thank you for participating in our study!
+          | 感谢你参与本研究！
         ul.list
-          li The study is now over and your account has been disabled.
+          li 本研究已结束，你的账号已停用。
           if messages.final[0].msg
-            li If you haven't yet already, please complete the end survey 
-              a(href=messages.final[0].msg) here.
+            li 如果你还没有填写结束问卷，请点击
+              a(href=messages.final[0].msg) 此处
+              | 完成。

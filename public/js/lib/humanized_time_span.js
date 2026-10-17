@@ -25,20 +25,20 @@ function humanized_time_span(date, ref_date, date_formats, time_units) {
   //Date Formats must be be ordered smallest -> largest and must end in a format with ceiling of null
   date_formats = date_formats || {
     past: [
-      { ceiling: 60, text: "$seconds seconds ago" },
-      { ceiling: 3600, text: "$minutes minutes ago" },
-      { ceiling: 86400, text: "$hours hours ago" },
-      { ceiling: 2629744, text: "$days days ago" },
-      { ceiling: 31556926, text: "$months months ago" },
-      { ceiling: null, text: "$years years ago" }      
+      { ceiling: 60, text: "$seconds 秒前" },
+      { ceiling: 3600, text: "$minutes 分钟前" },
+      { ceiling: 86400, text: "$hours 小时前" },
+      { ceiling: 2629744, text: "$days 天前" },
+      { ceiling: 31556926, text: "$months 个月前" },
+      { ceiling: null, text: "$years 年前" }
     ],
     future: [
-      { ceiling: 60, text: "in $seconds seconds" },
-      { ceiling: 3600, text: "in $minutes minutes" },
-      { ceiling: 86400, text: "in $hours hours" },
-      { ceiling: 2629744, text: "in $days days" },
-      { ceiling: 31556926, text: "in $months months" },
-      { ceiling: null, text: "in $years years" }
+      { ceiling: 60, text: "$seconds 秒后" },
+      { ceiling: 3600, text: "$minutes 分钟后" },
+      { ceiling: 86400, text: "$hours 小时后" },
+      { ceiling: 2629744, text: "$days 天后" },
+      { ceiling: 31556926, text: "$months 个月后" },
+      { ceiling: null, text: "$years 年后" }
     ]
   };
   //Time units must be be ordered largest -> smallest

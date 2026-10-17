@@ -55,6 +55,7 @@ const actorsController = require('./controllers/actors');
 const scriptController = require('./controllers/script');
 const userController = require('./controllers/user');
 const notificationController = require('./controllers/notification');
+const { getRulesForCondition } = require('./config/experimentRules');
 
 /**
  * API keys and Passport configuration.
@@ -194,21 +195,29 @@ app.post('/post/new', userpostupload.single('picinput'), scriptController.newPos
 app.post('/pageLog', passportConfig.isAuthenticated, userController.postPageLog);
 app.post('/pageTimes', passportConfig.isAuthenticated, userController.postPageTime);
 
-app.get('/com', function(req, res) {
-    const feed = req.query.feed == "true" ? true : false; //Are we accessing the community rules from the feed?
-    res.render('com', {
-        title: 'Community Rules',
-        feed
-    });
+app.get('/com', async function(req, res, next) {
+    try {
+        if (req.user) {
+            const rules = await getRulesForCondition(req.user.experimentalCondition);
+            if (!rules.showCommunityRules) return res.redirect('/info');
+        }
+        const feed = req.query.feed == "true" ? true : false; //Are we accessing the community rules from the feed?
+        res.render('com', {
+            title: '社区规范',
+            feed
+        });
+    } catch (err) {
+        next(err);
+    }
 });
 
 app.get('/info', passportConfig.isAuthenticated, function(req, res) {
     res.render('info', {
-        title: 'User Docs'
+        title: '使用说明'
     });
 });
 
-app.get('/tos', function(req, res) { res.render('tos', { title: 'Terms of Service' }); });
+app.get('/tos', function(req, res) { res.render('tos', { title: '服务条款' }); });
 
 app.get('/completed', passportConfig.isAuthenticated, userController.userTestResults);
 app.get('/notifications', passportConfig.isAuthenticated, notificationController.getNotifications);
@@ -225,7 +234,7 @@ app.post('/account/password', passportConfig.isAuthenticated, userController.pos
 app.post('/account/profile', passportConfig.isAuthenticated, useravatarupload.single('picinput'), userController.postUpdateProfile);
 app.get('/account/signup_info', passportConfig.isAuthenticated, function(req, res) {
     res.render('account/signup_info', {
-        title: 'Add Information'
+        title: '完善资料'
     });
 });
 app.post('/account/signup_info_post', passportConfig.isAuthenticated, useravatarupload.single('picinput'), userController.postSignupInfo);
@@ -239,10 +248,16 @@ app.get('/actors', passportConfig.isAuthenticated, actorsController.getActors)
 app.get('/feed', passportConfig.isAuthenticated, scriptController.getScript);
 app.post('/feed', passportConfig.isAuthenticated, scriptController.postUpdateFeedAction);
 app.post('/userPost_feed', passportConfig.isAuthenticated, scriptController.postUpdateUserPostFeedAction);
-app.get('/test', passportConfig.isAuthenticated, function(req, res) {
+app.get('/test', passportConfig.isAuthenticated, async function(req, res, next) {
+    try {
     res.render('test', {
-        title: 'Test'
+        title: '测试',
+        ...(await getRulesForCondition(req.user.experimentalCondition)),
+        ...require('./config/share')
     })
+    } catch (err) {
+        next(err);
+    }
 });
 
 /**

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Notification = require('../models/Notification.js');
 const helpers = require('./helpers');
 const shareConfig = require('../config/share');
+const { getRulesForCondition } = require('../config/experimentRules');
 const _ = require('lodash');
 
 /**
@@ -215,6 +216,7 @@ exports.getNotifications = async(req, res) => {
                     notification_feed: final_notify,
                     script: finalfeed,
                     count: newNotificationCount,
+                    ...(await getRulesForCondition(user.experimentalCondition)),
                     ...shareConfig
                 })
             }

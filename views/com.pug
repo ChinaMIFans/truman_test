@@ -2,27 +2,27 @@ extends ui_layout
 
 block content
   .ui.text.container(style="margin-top: 2em; margin-bottom: 2em")
-    h2(style="text-align: center;") Community Rules for EatSnap.Love
-    p We are so glad you are here to eat, snap and love along with us! Before you get started, please review our community rules. These rules help foster a friendly and fun community. Please note that this is not a comprehensive list. Our moderators reserve the right to remove anything we deem inappropriate.
+    h2(style="text-align: center;") 小蓝书社区规范
+    p 欢迎来到小蓝书！开始使用前，请先阅读社区规范。这些规则旨在营造友好、有趣的社区氛围。以下内容并未涵盖所有情况，版主有权移除任何不适当的内容。
 
-    p Remember if you encounter anything in the following list, be sure to <b>Flag It 🚩</b> so our moderators can investigate and help out.
+    p 如果你发现以下违规内容，请务必<b>举报 🚩</b>，版主会进行调查并处理。
 
-    h3 No SPAM (unless it's in a can!)
-    p This is not the place to sell your services or promote your brand. SPAM will be deleted when found.
+    h3 禁止垃圾信息（罐头里的除外！）
+    p 请勿在此推销服务或宣传品牌。发现垃圾信息后，我们会将其删除。
 
-    h3 No Personal Attacks and Bullying
-    p Zero tolerance on this! EatSnap.Love is a place to to share our snaps and our love, not to tear each other down. 
+    h3 禁止人身攻击和霸凌
+    p 我们对此零容忍！这里是分享生活与喜爱的地方，请友善交流，不要互相攻击。
 
-    h3 No Racism, sexism, and other discrimination
-    p Attacking entire classes of people is just like attacking a single person: we'll ban you for it.
+    h3 禁止种族歧视、性别歧视及其他歧视行为
+    p 歧视或攻击特定群体与攻击个人同样不可接受；违者将被封禁。
 
-    h3 No NSFW material
-    p If you wouldn't show your boss, don't show it here! 
+    h3 禁止发布不适宜公开的内容
+    p 如果你不愿意给同事或家人看，就不要发布在这里！
 
     if user && !user.consent
       .ui.big.green.labeled.icon.button.info
           i.rocket.icon
-          |   Got it!
+          |   我知道了
   
   script.
     $('.ui.big.green.labeled.icon.button.info').on('click', function() {

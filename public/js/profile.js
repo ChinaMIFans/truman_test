@@ -10,13 +10,13 @@ $(window).on("load", function() {
 
         if ($('input[type="password"][id="password"]').val().length >= 1 && $('input[type="password"][id="confirmPassword"]').val().length >= 1) {
             if ($('input[type="password"][id="password"]').val().length < 4 && $('input[type="password"][id="confirmPassword"]').val().length < 4) {
-                $("#passwordsMatch").html("<i class='icon times red'></i><span style='color: red'>Password is too short. Must be at least 4 characters long.</span>");
+                $("#passwordsMatch").html("<i class='icon times red'></i><span style='color: red'>密码至少需要 4 个字符。</span>");
                 $("#passwordsMatch").css("visibility", "visible");
             } else if ($('input[type="password"][id="password"]').val() !== $('input[type="password"][id="confirmPassword"]').val()) {
-                $("#passwordsMatch").html("<i class='icon times red'></i><span style='color: red'>Passwords do not match.</span>");
+                $("#passwordsMatch").html("<i class='icon times red'></i><span style='color: red'>两次输入的密码不一致。</span>");
                 $("#passwordsMatch").css("visibility", "visible");
             } else {
-                $("#passwordsMatch").html("<i class='icon check'></i><span>Passwords match.</span>");
+                $("#passwordsMatch").html("<i class='icon check'></i><span>两次输入的密码一致。</span>");
                 isFilled = true;
                 $("#passwordsMatch").css("visibility", "visible");
             }
