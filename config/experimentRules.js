@@ -3,11 +3,10 @@
 // sharePopup: true shows the confirmation modal; false shares immediately.
 // showCommunityRules: false skips the community-rules page for that group.
 const CONDITION_RULES = {
-    marginal: { sharePopup: true, showCommunityRules: true },
-    unambig_flag: { sharePopup: true, showCommunityRules: true },
-    troll: { sharePopup: true, showCommunityRules: true },
-    ambig_flag: { sharePopup: true, showCommunityRules: true },
-    unambig_none: { sharePopup: true, showCommunityRules: true }
+    1: { sharePopup: false, showCommunityRules: false },
+    2: { sharePopup: true, showCommunityRules: false },
+    3: { sharePopup: false, showCommunityRules: true },
+    4: { sharePopup: true, showCommunityRules: true },
 };
 
 const DEFAULT_RULES = Object.freeze({

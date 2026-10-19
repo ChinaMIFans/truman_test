@@ -53,6 +53,9 @@ async function getDataExport() {
         { id: 'NumUserPostCommentsLiked', title: 'NumUserPostCommentsLiked' },
         { id: 'NumUserPostCommentsFlagged', title: 'NumUserPostCommentsFlagged' },
         { id: 'NumActorPostsShared', title: 'NumActorPostsShared' },
+        { id: 'ActorPostsShared', title: 'ActorPostsShared' },
+        { id: 'UserPostsShared', title: 'UserPostsShared' },
+        { id: 'ActorPostsReadTime', title: 'ActorPostsReadTime' },
         { id: 'NumActorPostsViewed', title: 'NumActorPostsViewed' },
         { id: 'UserPostsCreated', title: 'UserPostsCreated' },
         { id: 'UserCommentsCreated', title: 'UserCommentsCreated' },
@@ -79,6 +82,7 @@ async function getDataExport() {
         record.Condition = user.experimentalCondition;
 
         let userPostsCreated = "";
+        let UserPostsShared = [];
         let NumUserPostsLiked = 0;
         let NumUserPostsShared = 0;
         let NumUserPostCommentsLiked = 0;
@@ -88,6 +92,7 @@ async function getDataExport() {
             userPostsCreated += string;
             if (userPost.liked) NumUserPostsLiked++;
             if (userPost.shared) NumUserPostsShared++;
+            if (userPost.shared) UserPostsShared.push(userPost.postID);
             NumUserPostCommentsLiked += userPost.comments.filter(comment => comment.liked && !comment.new_comment).length;
             NumUserPostCommentsFlagged += userPost.comments.filter(comment => comment.flagged && !comment.new_comment).length;
         }
@@ -103,6 +108,8 @@ async function getDataExport() {
             NumActorPostsViewed = 0;
         let ActorPostsLiked = [],
             ActorPostsFlagged = [],
+            ActorPostsShared = [],
+            ActorPostsReadTime = [],
             ActorCommentsLiked = [],
             ActorCommentsFlagged = [];
         let UserCommentsCreated = "";
@@ -113,6 +120,11 @@ async function getDataExport() {
                 continue;
             }
             if (feedAction.shared) NumActorPostsShared++;
+            if (feedAction.shared) ActorPostsShared.push(feedAction.post.postID);
+            const totalReadTimeMs = (feedAction.readTime || []).reduce((total, duration) => total + duration, 0);
+            if (totalReadTimeMs > 0) {
+                ActorPostsReadTime.push(`Post ${feedAction.post.postID}: ${(totalReadTimeMs / 1000).toFixed(2)}s`);
+            }
             NumActorPostsViewed += feedAction.rereadTimes || 0;
             if (feedAction.liked) {
                 NumActorPostsLiked++;
@@ -155,6 +167,9 @@ async function getDataExport() {
         record.NumUserPostCommentsLiked = NumUserPostCommentsLiked;
         record.NumUserPostCommentsFlagged = NumUserPostCommentsFlagged;
         record.NumActorPostsShared = NumActorPostsShared;
+        record.ActorPostsShared = ActorPostsShared;
+        record.UserPostsShared = UserPostsShared;
+        record.ActorPostsReadTime = ActorPostsReadTime;
         record.NumActorPostsViewed = NumActorPostsViewed;
         record.UserCommentsCreated = UserCommentsCreated;
         record.ActorPostsLiked = ActorPostsLiked;
