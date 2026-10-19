@@ -2,9 +2,46 @@ const passport = require('passport');
 const validator = require('validator');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
+const mongoose = require('mongoose');
 const User = require('../models/User');
+const ConditionAllocation = require('../models/ConditionAllocation');
 const shareConfig = require('../config/share');
 const { getRulesForCondition } = require('../config/experimentRules');
+
+function shuffleConditions(conditions) {
+    const shuffled = [...conditions];
+    for (let index = shuffled.length - 1; index > 0; index--) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+    return shuffled;
+}
+
+async function ensureConditionAllocator(conditions) {
+    try {
+        await ConditionAllocation.updateOne(
+            { _id: 'signup' },
+            {
+                $setOnInsert: {
+                    conditions,
+                    currentOrder: shuffleConditions(conditions),
+                    nextIndex: 0
+                }
+            },
+            { upsert: true }
+        );
+    } catch (err) {
+        // Another registration request may create the singleton first.
+        if (err.code !== 11000) throw err;
+    }
+
+    const allocator = await ConditionAllocation.findById('signup').lean().exec();
+    const configured = [...conditions].sort();
+    const stored = [...(allocator?.conditions || [])].sort();
+    if (JSON.stringify(configured) !== JSON.stringify(stored)) {
+        throw new Error('Experiment groups changed. Reset the condition allocation record before starting a new study.');
+    }
+}
 
 /**
  * GET /login
@@ -120,13 +157,11 @@ exports.postSignup = async(req, res, next) => {
             .split(',')
             .map(name => name.trim())
             .filter(Boolean);
-        if (experimentalConditionNames.length === 0) {
+        if (experimentalConditionNames.length < 2 || new Set(experimentalConditionNames).size !== experimentalConditionNames.length) {
             req.flash('errors', { msg: '实验分组尚未配置，请联系研究人员。' });
             return res.redirect('/signup');
         }
-        const experimentalCondition = experimentalConditionNames[
-            Math.floor(Math.random() * experimentalConditionNames.length)
-        ];
+        await ensureConditionAllocator(experimentalConditionNames);
 
         const surveyLink = process.env.POST_SURVEY ?
             process.env.POST_SURVEY +
@@ -139,7 +174,6 @@ exports.postSignup = async(req, res, next) => {
             password: req.body.password,
             mturkID: req.body.mturkID,
             username: req.body.username,
-            experimentalCondition: experimentalCondition,
             endSurveyLink: surveyLink,
             active: true,
             lastNotifyVisit: currDate,
@@ -148,7 +182,22 @@ exports.postSignup = async(req, res, next) => {
         if (req.query.r_id) {
             user.ResponseID = req.query.r_id;
         }
-        await user.save();
+        // Allocate and save the user in one transaction. Each randomized block
+        // contains one slot for every condition, so a full block is balanced.
+        await mongoose.connection.transaction(async(session) => {
+            const allocator = await ConditionAllocation.findById('signup').session(session).exec();
+            if (!allocator) throw new Error('Experiment condition allocator is missing.');
+
+            if (allocator.nextIndex >= allocator.currentOrder.length) {
+                allocator.currentOrder = shuffleConditions(experimentalConditionNames);
+                allocator.nextIndex = 0;
+            }
+
+            user.experimentalCondition = allocator.currentOrder[allocator.nextIndex];
+            allocator.nextIndex += 1;
+            await allocator.save({ session });
+            await user.save({ session });
+        });
         req.logIn(user, (err) => {
             if (err) {
                 return next(err);
